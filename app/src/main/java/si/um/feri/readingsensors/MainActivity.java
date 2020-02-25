@@ -9,6 +9,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
 import com.example.readingsensors.R;
 
@@ -25,9 +27,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Button startSensor = findViewById(R.id.start_test);
+        startSensor.setOnClickListener(startSensorOnClickListener);
+        Button stopSensor = findViewById(R.id.stop_test);
+        stopSensor.setOnClickListener(stopSensorOnClickListener);
+        
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE); // get access of system sensors
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER); // get reference for accelerometer
-        sensorManager.registerListener(this, accelerometer , accDelay); // register accelerometer with normal sample rate
     }
 
     /**
@@ -47,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float x = values[0];
         float y = values[1];
         float z = values[2];
-        Log.d(TAG, "x= "+x+" y= "+y+" z= "+z);
+        Log.v(TAG, "x= "+x+" y= "+y+" z= "+z);
     }
 
     @Override
@@ -64,6 +70,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onPause() {
         super.onPause();
+        sensorManager.unregisterListener(this); // unregister sensor when activity paused
+    }
+
+    private View.OnClickListener startSensorOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            startButtonClicked();
+        }
+    };
+
+    private View.OnClickListener stopSensorOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            stopButtonClicked();
+        }
+    };
+
+    private void startButtonClicked() {
+        sensorManager.registerListener(this, accelerometer , accDelay); // register sensor when activity resumed
+    }
+
+    private void stopButtonClicked() {
         sensorManager.unregisterListener(this); // unregister sensor when activity paused
     }
 }
