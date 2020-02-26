@@ -11,33 +11,43 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
 import com.example.readingsensors.R;
 
+import si.um.feri.lib.AccelerometerSample;
+import si.um.feri.lib.Experiment;
+
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
+    private static final String TAG = MainActivity.class.getSimpleName();
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private int accDelay = SensorManager.SENSOR_DELAY_NORMAL; // delay for accelerometer
+    private Experiment experiment;
 
-    private static final String TAG = "accelerometer";
+    EditText experimentNameEt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button startSensor = findViewById(R.id.start_test);
-        startSensor.setOnClickListener(startSensorOnClickListener);
-        Button stopSensor = findViewById(R.id.stop_test);
-        stopSensor.setOnClickListener(stopSensorOnClickListener);
-        
+        Button startSensorBtn = findViewById(R.id.btn_start_test);
+        startSensorBtn.setOnClickListener(startSensorOnClickListener);
+        Button stopSensorBtn = findViewById(R.id.btn_stop_test);
+        stopSensorBtn.setOnClickListener(stopSensorOnClickListener);
+
+        experimentNameEt = findViewById(R.id.et_experiment_name);
+        experiment = new Experiment();
+
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE); // get access of system sensors
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER); // get reference for accelerometer
     }
 
     /**
      * Invoked every time the sensor detects a change.
+     *
      * @param event
      */
     @Override
@@ -53,24 +63,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float x = values[0];
         float y = values[1];
         float z = values[2];
-        Log.v(TAG, "x= "+x+" y= "+y+" z= "+z);
+        Log.v(TAG, "x= " + x + " y= " + y + " z= " + z);
+
+        experiment.addSample(new AccelerometerSample(x, y, z), event.timestamp);
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        sensorManager.registerListener(this, accelerometer , accDelay); // register sensor when activity resumed
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        sensorManager.unregisterListener(this); // unregister sensor when activity paused
     }
 
     private View.OnClickListener startSensorOnClickListener = new View.OnClickListener() {
@@ -88,10 +88,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     };
 
     private void startButtonClicked() {
-        sensorManager.registerListener(this, accelerometer , accDelay); // register sensor when activity resumed
+        sensorManager.registerListener(this, accelerometer, accDelay); // register sensor when activity resumed
+        experiment.setExperimentName(experimentNameEt.getText().toString());
+        experiment.start();
     }
 
     private void stopButtonClicked() {
         sensorManager.unregisterListener(this); // unregister sensor when activity paused
+        experiment.stop();
     }
 }

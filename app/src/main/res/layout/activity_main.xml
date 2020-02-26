@@ -17,34 +17,34 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/start_test"
+        android:id="@+id/btn_start_test"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="@string/start_test"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etTestName" />
+        app:layout_constraintTop_toBottomOf="@+id/et_experiment_name" />
 
     <EditText
-        android:id="@+id/etTestName"
+        android:id="@+id/et_experiment_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:ems="10"
-        android:hint="@string/eksperiment_name"
+        android:hint="@string/experiment_name"
         android:inputType="textPersonName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
     <Button
-        android:id="@+id/stop_test"
+        android:id="@+id/btn_stop_test"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/stop_test"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/start_test" />
+        app:layout_constraintTop_toBottomOf="@+id/btn_start_test" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
