@@ -89,4 +89,21 @@ public class Experiment {
     public void setSampleList(ArrayList<AccelerometerSample> sampleList) {
         this.sampleList = sampleList;
     }
+
+    public String toCsv() {
+        StringBuilder sb = new StringBuilder();
+
+        for (AccelerometerSample sample: sampleList) {
+            sb.append(sample.timestamp);
+            sb.append(";");
+            sb.append(sample.x);
+            sb.append(";");
+            sb.append(sample.y);
+            sb.append(";");
+            sb.append(sample.z);
+            sb.append(";");
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
 }
