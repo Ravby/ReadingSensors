@@ -1,9 +1,5 @@
 package si.um.feri.readingsensors;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -20,7 +16,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import si.um.feri.readingsensors.R;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,7 +34,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static final int PERMISSION_REQUEST_CODE = 100;
     private SensorManager sensorManager;
     private Sensor accelerometer;
-    private int accDelay = SensorManager.SENSOR_DELAY_NORMAL; // delay for accelerometer
+    private int accelerometerDelay;
     private Experiment experiment;
 
     EditText experimentNameEt;
@@ -51,18 +50,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         stopSensorBtn = findViewById(R.id.btn_stop_test);
         stopSensorBtn.setOnClickListener(stopSensorOnClickListener);
         stopSensorBtn.setEnabled(false);
-
         experimentNameEt = findViewById(R.id.et_experiment_name);
+
         experiment = new Experiment();
+        accelerometerDelay = SensorManager.SENSOR_DELAY_NORMAL; // could be set from UI
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE); // get access of system sensors
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER); // get reference for accelerometer
+        if (sensorManager != null) {
+            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER); // get reference for accelerometer
+        }
     }
 
     /**
      * Invoked every time the sensor detects a change.
-     *
-     * @param event
      */
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -87,14 +87,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-    private View.OnClickListener startSensorOnClickListener = new View.OnClickListener() {
+    private final View.OnClickListener startSensorOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             startButtonClicked();
         }
     };
 
-    private View.OnClickListener stopSensorOnClickListener = new View.OnClickListener() {
+    private final View.OnClickListener stopSensorOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             stopButtonClicked();
@@ -104,15 +104,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void startButtonClicked() {
         startSensorBtn.setEnabled(false);
         stopSensorBtn.setEnabled(true);
-        sensorManager.registerListener(this, accelerometer, accDelay); // register sensor when activity resumed
-        experiment.setExperimentName(experimentNameEt.getText().toString());
+        sensorManager.registerListener(this, accelerometer, accelerometerDelay);
+        experiment.setName(experimentNameEt.getText().toString());
         experiment.start();
     }
 
     private void stopButtonClicked() {
         startSensorBtn.setEnabled(true);
         stopSensorBtn.setEnabled(false);
-        sensorManager.unregisterListener(this); // unregister sensor when activity paused
+        sensorManager.unregisterListener(this, accelerometer);
         experiment.stop();
         saveExperimentToFile();
     }
@@ -120,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void saveExperimentToFile() {
 
         if (isExternalStorageAvailable() && !isExternalStorageReadOnly()) {
-            String fileName = experiment.getExperimentName()+".csv";
+            String fileName = experiment.getName() + ".csv";
             if (Build.VERSION.SDK_INT >= 23) {
                 if (checkPermission()) {
                     writeToFile(fileName, experiment.toCsv());
@@ -135,19 +135,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void writeToFile(String fileName, String content) {
         File file = new File(this.getExternalFilesDir("tests"), fileName);
+        boolean fileCreated;
         try {
-            file.createNewFile();
+            fileCreated = file.createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
-            Log.e(TAG, e.getMessage());
             return;
         }
-        try (FileOutputStream os = new FileOutputStream(file)){
-            os.write(content.getBytes());
-            Toast.makeText(this,"Experiment : "+fileName + " successfully saved!", Toast.LENGTH_LONG).show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e(TAG, e.getMessage());
+        if (fileCreated) {
+            try (FileOutputStream os = new FileOutputStream(file)) {
+                os.write(content.getBytes());
+                Toast.makeText(this, "Experiment : " + fileName + " successfully saved!", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -158,16 +159,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void requestPermission() {
         // always request permission
         ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
-
         //ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.v(TAG, "Write permission granted.");
-                String fileName = experiment.getExperimentName()+".csv";
+                String fileName = experiment.getName() + ".csv";
                 writeToFile(fileName, experiment.toCsv());
             } else {
                 Log.v(TAG, "Write permission denied.");

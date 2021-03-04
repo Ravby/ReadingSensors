@@ -1,10 +1,14 @@
 package si.um.feri.lib;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class Experiment {
-    private String experimentName;
-    private String experimentDescription;
+    private String name;
+    private String description = "";
+    private String startDateTime;
+    private String endDateTime;
     private long startTime;
     private long endTime;
     private double duration;
@@ -13,12 +17,14 @@ public class Experiment {
 
     private ArrayList<AccelerometerSample> sampleList;
 
+    static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     public Experiment() {
-        sampleList = new ArrayList<>();
+        this(LocalDateTime.now().format(formatter));
     }
 
-    public Experiment(String experimentName) {
-        this.experimentName = experimentName;
+    public Experiment(String name) {
+        this.name = name;
         sampleList = new ArrayList<>();
     }
 
@@ -26,11 +32,13 @@ public class Experiment {
         sampleList.clear();
         isFirstSample = true;
         startTime = System.nanoTime();
+        startDateTime = LocalDateTime.now().format(formatter);
     }
 
     public void stop() {
         endTime = System.nanoTime();
         duration = nanoToSeconds(endTime - startTime);
+        endDateTime = LocalDateTime.now().format(formatter);
     }
 
     public static double nanoToSeconds(long nano) {
@@ -38,7 +46,7 @@ public class Experiment {
     }
 
     public void addSample(AccelerometerSample sample, long timestamp) {
-        if(isFirstSample) {
+        if (isFirstSample) {
             firstSampleTimestamp = timestamp;
             isFirstSample = false;
         }
@@ -46,20 +54,20 @@ public class Experiment {
         sampleList.add(sample);
     }
 
-    public String getExperimentName() {
-        return experimentName;
+    public String getName() {
+        return name;
     }
 
-    public void setExperimentName(String experimentName) {
-        this.experimentName = experimentName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getExperimentDescription() {
-        return experimentDescription;
+    public String getDescription() {
+        return description;
     }
 
-    public void setExperimentDescription(String experimentDescription) {
-        this.experimentDescription = experimentDescription;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public long getStartTime() {
@@ -92,8 +100,9 @@ public class Experiment {
 
     public String toCsv() {
         StringBuilder sb = new StringBuilder();
-
-        for (AccelerometerSample sample: sampleList) {
+        sb.append(name).append(";").append(description).append(";").append(startDateTime)
+                .append(";").append(endDateTime).append(";").append("\n");
+        for (AccelerometerSample sample : sampleList) {
             sb.append(sample.timestamp);
             sb.append(";");
             sb.append(sample.x);
