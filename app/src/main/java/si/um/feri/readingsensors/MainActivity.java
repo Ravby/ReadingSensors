@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         experimentNameEt = findViewById(R.id.et_experiment_name);
 
         experiment = new Experiment();
-        accelerometerDelay = SensorManager.SENSOR_DELAY_NORMAL; // could be set from UI
+        accelerometerDelay = SensorManager.SENSOR_DELAY_FASTEST; // could be set from UI
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE); // get access of system sensors
         if (sensorManager != null) {
